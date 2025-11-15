@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zec Dogs Mint</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; padding: 20px; color: #333; }
+        .container { max-width: 700px; margin: 0 auto; padding: 20px; }
+        .header { text-align: center; margin-bottom: 40px; color: white; }
+        .header h1 { font-size: 3rem; font-weight: bold; margin-bottom: 10px; text-shadow: 2px 2px 4px rgba(0,0,0,0.3); background: linear-gradient(45deg, #ffd700, #ffed4e); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+        .header p { font-size: 1.2rem; opacity: 0.9; text-shadow: 1px 1px 2px rgba(0,0,0,0.3); }
+        .progress-container { background: rgba(255, 255, 255, 0.15); backdrop-filter: blur(10px); border-radius: 15px; padding: 20px; margin-top: 30px; border: 1px solid rgba(255, 255, 255, 0.2); }
+        .progress-info { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; color: white; }
+        .progress-label { font-size: 1.1rem; font-weight: 600; text-shadow: 1px 1px 2px rgba(0,0,0,0.3); }
+        .progress-numbers { font-size: 1.1rem; font-weight: bold; background: linear-gradient(45deg, #ffd700, #ffed4e); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+        .progress-bar { width: 100%; height: 12px; background: rgba(255, 255, 255, 0.2); border-radius: 6px; overflow: hidden; margin-bottom: 10px; box-shadow: inset 0 2px 4px rgba(0,0,0,0.1); }
+        .progress-fill { height: 100%; background: linear-gradient(90deg, #48bb78, #38a169, #2f855a); border-radius: 6px; transition: width 0.8s ease; }
+        .progress-text { text-align: center; color: white; font-size: 0.95rem; font-weight: 600; text-shadow: 1px 1px 2px rgba(0,0,0,0.3); }
+        .card { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); border-radius: 20px; padding: 30px; margin: 25px 0; box-shadow: 0 15px 35px rgba(0,0,0,0.1); border: 1px solid rgba(255,255,255,0.2); }
+        .card h2 { color: #4a5568; margin-bottom: 20px; font-size: 1.5rem; display: flex; align-items: center; gap: 10px; }
+        .quantity-selector { background: #f7fafc; border-radius: 12px; padding: 20px; margin: 20px 0; }
+        .quantity-selector label { display: block; margin-bottom: 10px; font-weight: 600; color: #4a5568; }
+        .quantity-controls { display: flex; align-items: center; justify-content: center; gap: 15px; }
+        .quantity-btn { background: #667eea; color: white; border: none; width: 40px; height: 40px; border-radius: 50%; font-size: 1.5rem; cursor: pointer; transition: all 0.3s ease; }
+        .quantity-btn:hover { background: #764ba2; transform: scale(1.1); }
+        .quantity-display { font-size: 2rem; font-weight: bold; color: #667eea; min-width: 60px; text-align: center; }
+        .total-price { background: linear-gradient(135deg, #48bb78, #38a169); color: white; padding: 15px; border-radius: 10px; margin-top: 15px; text-align: center; font-size: 1.3rem; font-weight: bold; }
+        .btn { width: 100%; padding: 15px 25px; border: none; border-radius: 12px; font-size: 1rem; font-weight: 600; cursor: pointer; transition: all 0.3s ease; margin: 10px 0; text-transform: uppercase; letter-spacing: 0.5px; }
+        .btn-primary { background: linear-gradient(135deg, #667eea, #764ba2); color: white; box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3); }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4); }
+        .btn-secondary { background: linear-gradient(135deg, #48bb78, #38a169); color: white; box-shadow: 0 4px 15px rgba(72, 187, 120, 0.3); }
+        .btn-secondary:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(72, 187, 120, 0.4); }
+        .btn-accent { background: linear-gradient(135deg, #ed8936, #dd6b20); color: white; box-shadow: 0 4px 15px rgba(237, 137, 54, 0.3); }
+        .status-message { padding: 15px; border-radius: 10px; margin: 15px 0; text-align: center; font-weight: 600; }
+        .error { background: #fed7d7; color: #c53030; border: 1px solid #feb2b2; }
+        .success { background: #c6f6d5; color: #2f855a; border: 1px solid #9ae6b4; }
+        .loading { background: #bee3f8; color: #2b6cb0; border: 1px solid #90cdf4; }
+        .results-section { display: none; }
+        .nft-item { background: linear-gradient(135deg, #f7fafc, #edf2f7); border-radius: 15px; padding: 25px; margin: 20px 0; border: 1px solid #e2e8f0; }
+        .nft-item h4 { color: #4a5568; margin-bottom: 15px; font-size: 1.2rem; }
+        .cid-display { background: white; border: 2px solid #e2e8f0; border-radius: 10px; padding: 15px; font-family: 'Courier New', monospace; word-break: break-all; margin: 15px 0; color: #2d3748; font-size: 0.9rem; }
+        .instructions { background: linear-gradient(135deg, #fef5e7, #fed7aa); border-radius: 15px; padding: 25px; margin: 25px 0; }
+        .instructions h3 { color: #c05621; margin-bottom: 20px; font-size: 1.3rem; }
+        .instructions ol { color: #744210; line-height: 1.8; padding-left: 20px; }
+        .instructions li { margin: 8px 0; }
+        .instructions strong { color: #c05621; }
+        .btn-group { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 15px; }
+        .emoji { font-size: 1.2em; }
+        
+        /* --- NEW MODAL STYLES --- */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(5px); display: none; justify-content: center; align-items: center; z-index: 999; }
+        .modal-content { background: white; border-radius: 20px; padding: 30px; max-width: 600px; width: 90%; box-shadow: 0 10px 30px rgba(0,0,0,0.2); }
+        .modal-content h2 { color: #4a5568; margin-bottom: 20px; font-size: 1.5rem; }
+        .payment-box { background: #f7fafc; border: 2px dashed #cbd5e0; border-radius: 12px; padding: 20px; margin: 20px 0; text-align: center; }
+        .payment-box .label { margin-bottom: 10px; font-weight: 600; color: #4a5568; }
+        .payment-value { font-family: 'Courier New', monospace; font-size: 1.1rem; word-break: break-all; background: white; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0; margin: 10px 0; color: #c53030; font-weight: bold; }
+        .payment-box .address-text { font-size: 1rem; color: #2d3748; }
+        .loader { width: 48px; height: 48px; border: 5px solid #FFF; border-bottom-color: #667eea; border-radius: 50%; display: inline-block; box-sizing: border-box; animation: rotation 1s linear infinite; margin: 20px auto; }
+        @keyframes rotation { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>ZEC DOGS</h1>
+            <p>Premium Digital Collection on Zcash</p>
+            <div class="progress-container">
+                <div class="progress-info">
+                    <span class="progress-label">Mint Progress</span>
+                    <span class="progress-numbers" id="progressNumbers">Loading...</span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill" style="width: 0%"></div>
+                </div>
+                <div class="progress-text" id="progressText">
+                    Loading...
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2><span class="emoji">🐕</span> Select Your Quantity</h2>
+            <div class="quantity-selector">
+                <label>How many Zec Dogs?</label>
+                <div class="quantity-controls">
+                    <button class="quantity-btn" onclick="changeQuantity(-1)">-</button>
+                    <div class="quantity-display" id="quantityDisplay">1</div>
+                    <button class="quantity-btn" onclick="changeQuantity(1)">+</button>
+                </div>
+                <div class="total-price" id="totalPrice">
+                    Total: 0.005 ZEC
+                </div>
+            </div>
+            <button class="btn btn-primary" onclick="startMintProcess()" id="mintBtn">
+                Mint Now
+            </button>
+            <div id="status"></div>
+        </div>
+
+        <div id="results" class="results-section">
+            <div class="card">
+                <h2><span class="emoji">🎉</span> Payment Confirmed!</h2>
+                <div id="cids"></div>
+                <div class="instructions">
+                    <h3>📝 How to Mint Your Items:</h3>
+                    <ol>
+                        <li>Click the <strong>Copy CID</strong> button for each item below</li>
+                        <li>Click <strong>Mint on Zinc</strong> to open the minting platform</li>
+                        <li>On Zinc: Click <strong>"Create Inscription"</strong></li>
+                        <li>Protocol: Select <strong>Zinc (NFTs)</strong></li>
+                        <li>Operation: Choose <strong>Mint NFT</strong></li>
+                        <li>Content Protocol: Select <strong>IPFS</strong></li>
+                        <li>Paste your copied CID in the content field</li>
+                        <li>MIME Type: Select <strong>PNG Image</strong></li>
+                        <li>Click <strong>"Create Inscription"</strong> to complete minting</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="paymentModal">
+        <div class="modal-content">
+            <h2><span class="emoji">💳</span> Complete Your Payment</h2>
+            <div class="payment-box">
+                <div class="label">Send this EXACT amount:</div>
+                <div class="payment-value" id="uniqueAmount">0.00000000 ZEC</div>
+                <button class="btn btn-secondary" onclick="copyValue('uniqueAmount')">📋 Copy Amount</button>
+            </div>
+            <div class="payment-box">
+                <div class="label">To this address:</div>
+                <div class="payment-value address-text" id="paymentAddress">...</div>
+                <button class="btn btn-secondary" onclick="copyValue('paymentAddress')">📋 Copy Address</button>
+            </div>
+            <div style="text-align: center; margin-top: 20px;">
+                <div class="loader"></div>
+                <div class="status-message loading" id="modalStatus">Waiting for payment...</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentQuantity = 1;
+        const PRICE_PER_NFT = 0.005;
+        const MAX_QUANTITY = 20;
+        let activeSessionId = null;
+        let paymentCheckInterval = null;
+
+        window.addEventListener('load', updateMintProgress);
+        setInterval(updateMintProgress, 30000); // Update every 30 seconds
+
+        async function updateMintProgress() {
+            try {
+                const response = await fetch('http://localhost:3000/mint-progress');
+                const data = await response.json();
+                document.getElementById('progressNumbers').textContent = `${data.minted} / ${data.total}`;
+                document.getElementById('progressFill').style.width = `${data.percentage}%`;
+                document.getElementById('progressText').textContent = `${data.percentage}% Minted`;
+            } catch (error) { console.error('Failed to update progress:', error); }
+        }
+
+        function changeQuantity(delta) {
+            const newQuantity = currentQuantity + delta;
+            if (newQuantity >= 1 && newQuantity <= MAX_QUANTITY) {
+                currentQuantity = newQuantity;
+                document.getElementById('quantityDisplay').textContent = currentQuantity;
+                updateTotalPrice();
+            }
+        }
+
+        function updateTotalPrice() {
+            const total = (currentQuantity * PRICE_PER_NFT).toFixed(3);
+            document.getElementById('totalPrice').textContent = `Total: ~${total} ZEC`;
+        }
+        updateTotalPrice(); // Call on load
+
+        // New flow starts here
+        async function startMintProcess() {
+            const statusDiv = document.getElementById('status');
+            const mintBtn = document.getElementById('mintBtn');
+            mintBtn.disabled = true;
+            statusDiv.innerHTML = '<div class="status-message loading">🔄 Creating payment session...</div>';
+
+            try {
+                const response = await fetch('http://localhost:3000/create-payment-intent', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ quantity: currentQuantity })
+                });
+                const data = await response.json();
+
+                if (data.error) {
+                    statusDiv.innerHTML = `<div class="status-message error">❌ ${data.error}</div>`;
+                    mintBtn.disabled = false;
+                    return;
+                }
+
+                if (data.success) {
+                    activeSessionId = data.sessionId;
+                    document.getElementById('uniqueAmount').textContent = data.amount + ' ZEC';
+                    document.getElementById('paymentAddress').textContent = data.paymentAddress;
+                    document.getElementById('paymentModal').style.display = 'flex';
+                    statusDiv.innerHTML = '';
+                    mintBtn.disabled = false;
+                    
+                    // Start polling for payment
+                    paymentCheckInterval = setInterval(checkPaymentStatus, 5000); // Check every 5 seconds
+                }
+            } catch (error) {
+                statusDiv.innerHTML = '<div class="status-message error">❌ Network error. Please try again.</div>';
+                mintBtn.disabled = false;
+            }
+        }
+
+        // New: Polls the server to see if payment is complete
+        async function checkPaymentStatus() {
+            if (!activeSessionId) return;
+
+            try {
+                const response = await fetch(`http://localhost:3000/check-payment-status/${activeSessionId}`);
+                const data = await response.json();
+
+                if (data.status === 'complete') {
+                    // SUCCESS!
+                    clearInterval(paymentCheckInterval);
+                    document.getElementById('paymentModal').style.display = 'none';
+                    displayResults(data);
+                    updateMintProgress(); // Refresh progress
+                } else if (data.status === 'pending') {
+                    // Not yet, keep waiting
+                    document.getElementById('modalStatus').textContent = "Waiting for payment...";
+                } else {
+                    // Error
+                    clearInterval(paymentCheckInterval);
+                    document.getElementById('modalStatus').textContent = data.message || 'Error';
+                }
+            } catch (error) {
+                console.error('Payment check failed:', error);
+            }
+        }
+
+        function displayResults(data) {
+            let html = `<div class="status-message success">🎉 Successfully claimed ${data.quantity} Zec Dog${data.quantity > 1 ? 's' : ''}!</div>`;
+            data.items.forEach((item, i) => {
+                html += `
+                    <div class="nft-item">
+                        <h4>🐕 Zec Dog (Mint #${i + 1})</h4>
+                        <div class="cid-display" id="cid${i}">${item.cid}</div>
+                        <div class="btn-group">
+                            <button class="btn btn-secondary" onclick="copyValue('cid${i}', true)">
+                                📋 Copy CID
+                            </button>
+                            <button class="btn btn-accent" onclick="window.open('https://zinc.is', '_blank')">
+                                🚀 Mint on Zinc
+                            </button>
+                        </div>
+                    </div>
+                `;
+            });
+            document.getElementById('cids').innerHTML = html;
+            document.getElementById('results').style.display = 'block';
+            document.getElementById('results').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        function copyValue(elementId, isCid = false) {
+            const text = document.getElementById(elementId).textContent.trim();
+            navigator.clipboard.writeText(text).then(() => {
+                showToast(isCid ? 'CID copied!' : 'Address copied!', 'success');
+            }).catch(() => {
+                showToast('Failed to copy', 'error');
+            });
+        }
+        
+        function showToast(message, type) {
+            const toast = document.createElement('div');
+            toast.className = `status-message ${type}`;
+            toast.textContent = message;
+            toast.style.position = 'fixed';
+            toast.style.top = '20px';
+            toast.style.right = '20px';
+            toast.style.zIndex = '1000';
+            toast.style.maxWidth = '300px';
+            
+            document.body.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.remove();
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
