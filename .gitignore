@@ -6,7 +6,3 @@ nfts.db.backup
 *.log
 .env
 .DS_Store
-
-# Keep NFT data secret!
-data/
-data/nfts.json
