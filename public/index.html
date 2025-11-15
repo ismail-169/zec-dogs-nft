@@ -37,6 +37,7 @@
         .error { background: #fed7d7; color: #c53030; border: 1px solid #feb2b2; }
         .success { background: #c6f6d5; color: #2f855a; border: 1px solid #9ae6b4; }
         .loading { background: #bee3f8; color: #2b6cb0; border: 1px solid #90cdf4; }
+        .warning { background: #fef5e7; color: #c05621; border: 2px solid #ed8936; }
         .results-section { display: none; }
         .nft-item { background: linear-gradient(135deg, #f7fafc, #edf2f7); border-radius: 15px; padding: 25px; margin: 20px 0; border: 1px solid #e2e8f0; }
         .nft-item h4 { color: #4a5568; margin-bottom: 15px; font-size: 1.2rem; }
@@ -49,13 +50,45 @@
         .btn-group { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 15px; }
         .emoji { font-size: 1.2em; }
         
-        /* --- NEW MODAL STYLES --- */
+        /* Modal styles */
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(5px); display: none; justify-content: center; align-items: center; z-index: 999; }
-        .modal-content { background: white; border-radius: 20px; padding: 30px; max-width: 600px; width: 90%; box-shadow: 0 10px 30px rgba(0,0,0,0.2); }
+        .modal-content { background: white; border-radius: 20px; padding: 30px; max-width: 600px; width: 90%; box-shadow: 0 10px 30px rgba(0,0,0,0.2); max-height: 90vh; overflow-y: auto; }
         .modal-content h2 { color: #4a5568; margin-bottom: 20px; font-size: 1.5rem; }
+        
+        /* WARNING BOX - Prominent styling */
+        .warning-box { 
+            background: linear-gradient(135deg, #fed7d7, #feb2b2); 
+            border: 3px solid #c53030; 
+            border-radius: 12px; 
+            padding: 20px; 
+            margin: 20px 0; 
+            text-align: center;
+            animation: pulse 2s ease-in-out infinite;
+        }
+        .warning-box .warning-icon { 
+            font-size: 2.5rem; 
+            margin-bottom: 10px; 
+        }
+        .warning-box .warning-title { 
+            font-size: 1.3rem; 
+            font-weight: bold; 
+            color: #742a2a; 
+            margin-bottom: 10px;
+            text-transform: uppercase;
+        }
+        .warning-box .warning-text { 
+            font-size: 1.1rem; 
+            color: #742a2a; 
+            line-height: 1.6;
+        }
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+        }
+        
         .payment-box { background: #f7fafc; border: 2px dashed #cbd5e0; border-radius: 12px; padding: 20px; margin: 20px 0; text-align: center; }
-        .payment-box .label { margin-bottom: 10px; font-weight: 600; color: #4a5568; }
-        .payment-value { font-family: 'Courier New', monospace; font-size: 1.1rem; word-break: break-all; background: white; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0; margin: 10px 0; color: #c53030; font-weight: bold; }
+        .payment-box .label { margin-bottom: 10px; font-weight: 600; color: #4a5568; font-size: 1.1rem; }
+        .payment-value { font-family: 'Courier New', monospace; font-size: 1.2rem; word-break: break-all; background: white; padding: 15px; border-radius: 8px; border: 2px solid #e2e8f0; margin: 10px 0; color: #c53030; font-weight: bold; }
         .payment-box .address-text { font-size: 1rem; color: #2d3748; }
         .loader { width: 48px; height: 48px; border: 5px solid #FFF; border-bottom-color: #667eea; border-radius: 50%; display: inline-block; box-sizing: border-box; animation: rotation 1s linear infinite; margin: 20px auto; }
         @keyframes rotation { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
@@ -125,27 +158,48 @@
     <div class="modal-overlay" id="paymentModal">
         <div class="modal-content">
             <h2><span class="emoji">💳</span> Complete Your Payment</h2>
-            <div class="payment-box">
-                <div class="label">Send this EXACT amount:</div>
-                <div class="payment-value" id="uniqueAmount">0.00000000 ZEC</div>
-                <button class="btn btn-secondary" onclick="copyValue('uniqueAmount')">📋 Copy Amount</button>
+            
+            <!-- CRITICAL WARNING -->
+            <div class="warning-box">
+                <div class="warning-icon">⚠️</div>
+                <div class="warning-title">⚠️ IMPORTANT: Send EXACT Amount ⚠️</div>
+                <div class="warning-text">
+                    You MUST send the <strong>EXACT amount shown below</strong> (including all decimals).<br>
+                    Sending any other amount will result in payment not being detected!<br>
+                    <strong>⏰ You have 5 MINUTES to complete payment or your session will expire.</strong>
+                </div>
             </div>
+            
             <div class="payment-box">
-                <div class="label">To this address:</div>
+                <div class="label">⚡ Send this EXACT amount:</div>
+                <div class="payment-value" id="uniqueAmount">0.00000000 ZEC</div>
+                <button class="btn btn-secondary" onclick="copyValue('uniqueAmount')">📋 Copy Exact Amount</button>
+            </div>
+            
+            <div class="payment-box">
+                <div class="label">📬 To this address:</div>
                 <div class="payment-value address-text" id="paymentAddress">...</div>
                 <button class="btn btn-secondary" onclick="copyValue('paymentAddress')">📋 Copy Address</button>
             </div>
+            
+            <div class="status-message warning" style="font-size: 0.95rem; margin-top: 15px;">
+                💡 <strong>Tip:</strong> Use the "Copy Exact Amount" button to avoid typing errors!
+            </div>
+            
             <div style="text-align: center; margin-top: 20px;">
                 <div class="loader"></div>
                 <div class="status-message loading" id="modalStatus">Waiting for payment...</div>
+                <div style="color: #718096; font-size: 0.9rem; margin-top: 10px;">
+                    This may take 1-3 minutes after sending
+                </div>
             </div>
         </div>
     </div>
 
     <script>
-        let currentQuantity = 1;
         const PRICE_PER_NFT = 0.005;
         const MAX_QUANTITY = 20;
+        let currentQuantity = 1;
         let activeSessionId = null;
         let paymentCheckInterval = null;
 
@@ -154,12 +208,25 @@
 
         async function updateMintProgress() {
             try {
-                const response = await fetch('http://localhost:3000/mint-progress');
+                const response = await fetch('/mint-progress');
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
                 const data = await response.json();
+                
+                // Update progress display
                 document.getElementById('progressNumbers').textContent = `${data.minted} / ${data.total}`;
                 document.getElementById('progressFill').style.width = `${data.percentage}%`;
                 document.getElementById('progressText').textContent = `${data.percentage}% Minted`;
-            } catch (error) { console.error('Failed to update progress:', error); }
+                
+            } catch (error) { 
+                console.error('Failed to update progress:', error);
+                // Show error state instead of "Loading..."
+                document.getElementById('progressNumbers').textContent = 'Error';
+                document.getElementById('progressText').textContent = 'Failed to load progress';
+            }
         }
 
         function changeQuantity(delta) {
@@ -185,7 +252,7 @@
             statusDiv.innerHTML = '<div class="status-message loading">🔄 Creating payment session...</div>';
 
             try {
-                const response = await fetch('http://localhost:3000/create-payment-intent', {
+                const response = await fetch('/create-payment-intent', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ quantity: currentQuantity })
@@ -220,7 +287,7 @@
             if (!activeSessionId) return;
 
             try {
-                const response = await fetch(`http://localhost:3000/check-payment-status/${activeSessionId}`);
+                const response = await fetch(`/check-payment-status/${activeSessionId}`);
                 const data = await response.json();
 
                 if (data.status === 'complete') {
@@ -232,6 +299,11 @@
                 } else if (data.status === 'pending') {
                     // Not yet, keep waiting
                     document.getElementById('modalStatus').textContent = "Waiting for payment...";
+                } else if (data.status === 'expired') {
+                    // Session expired
+                    clearInterval(paymentCheckInterval);
+                    document.getElementById('paymentModal').style.display = 'none';
+                    document.getElementById('status').innerHTML = '<div class="status-message error">⏱️ Payment session expired. Please start a new mint.</div>';
                 } else {
                     // Error
                     clearInterval(paymentCheckInterval);
@@ -268,7 +340,7 @@
         function copyValue(elementId, isCid = false) {
             const text = document.getElementById(elementId).textContent.trim();
             navigator.clipboard.writeText(text).then(() => {
-                showToast(isCid ? 'CID copied!' : 'Address copied!', 'success');
+                showToast(isCid ? 'CID copied!' : 'Copied!', 'success');
             }).catch(() => {
                 showToast('Failed to copy', 'error');
             });

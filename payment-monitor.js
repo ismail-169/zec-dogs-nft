@@ -1,6 +1,5 @@
 const axios = require('axios');
 const Database = require('better-sqlite3');
-const bs58 = require('bs58'); // Keep for parsing if needed, though not for payment
 const DB_PATH = process.env.DATABASE_PATH || 'nfts.db';
 const db = new Database(DB_PATH);
 
@@ -88,41 +87,61 @@ async function scanBlock(blockHeight) {
 }
 
 /**
- * Fulfills an order: claims NFTs and updates the session
+ * Fulfills an order: assigns the RESERVED NFTs and updates the session
  */
 function fulfillOrder(session, txid, amountPaid) {
     try {
         // Use a transaction for database integrity
         db.transaction(() => {
-            // 1. Get random, unclaimed NFTs
-            const nfts = db.prepare(
-                'SELECT cid FROM nfts WHERE claimed = 0 AND id <= ? ORDER BY RANDOM() LIMIT ?'
-            ).all(MAX_SUPPLY, session.quantity);
+            // 1. Get the RESERVED NFTs for this session (not random anymore!)
+            const nfts = db.prepare(`
+                SELECT cid FROM nfts 
+                WHERE session_id = ? 
+                AND claimed = 0 
+                AND id <= ?
+            `).all(session.sessionId, MAX_SUPPLY);
 
+            // Safety check - should never happen due to reservation system
             if (nfts.length < session.quantity) {
-                console.error(`✗ CRITICAL ERROR: Not enough NFTs left for session ${session.sessionId}. Refunding required.`);
-                // In a real system, you'd flag this for a refund.
+                console.error(`❌ CRITICAL ERROR: Not enough reserved NFTs for session ${session.sessionId}`);
+                console.error(`   Expected: ${session.quantity}, Found: ${nfts.length}`);
+                console.error(`   This should NEVER happen with the reservation system!`);
+                
+                // Release any partial reservations
+                db.prepare('UPDATE nfts SET session_id = NULL WHERE session_id = ? AND claimed = 0')
+                    .run(session.sessionId);
+                
+                // Mark session as failed
+                db.prepare('UPDATE sessions SET status = ? WHERE session_uuid = ?')
+                    .run('failed', session.sessionId);
+                
                 return;
             }
 
             const assignedCids = nfts.map(n => n.cid);
 
             // 2. Update the session to 'complete'
-            db.prepare(
-                'UPDATE sessions SET status = ?, payment_txid = ?, assigned_cids = ? WHERE session_uuid = ?'
-            ).run('complete', txid, JSON.stringify(assignedCids), session.sessionId);
+            db.prepare(`
+                UPDATE sessions 
+                SET status = ?, payment_txid = ?, assigned_cids = ? 
+                WHERE session_uuid = ?
+            `).run('complete', txid, JSON.stringify(assignedCids), session.sessionId);
 
-            // 3. Mark the NFTs as 'claimed'
-            const updateNftStmt = db.prepare('UPDATE nfts SET claimed = 1, session_id = ? WHERE cid = ?');
-            for (const cid of assignedCids) {
-                updateNftStmt.run(session.sessionId, cid);
-            }
+            // 3. Mark the NFTs as 'claimed' (they're already linked to session_id)
+            db.prepare(`
+                UPDATE nfts 
+                SET claimed = 1 
+                WHERE session_id = ? 
+                AND claimed = 0
+            `).run(session.sessionId);
             
-            console.log(`   ✅ Order for ${session.quantity} NFTs (Session ${session.sessionId}) fulfilled!`);
+            console.log(`   ✅ Order fulfilled: ${session.quantity} NFTs → Session ${session.sessionId}`);
+            console.log(`   📦 Assigned CIDs: ${assignedCids.join(', ').substring(0, 100)}...`);
         })();
 
     } catch (err) {
-        console.error(`✗ CRITICAL ERROR during fulfillment: ${err.message}`);
+        console.error(`❌ CRITICAL ERROR during fulfillment: ${err.message}`);
+        console.error(err.stack);
     }
 }
 
@@ -174,6 +193,8 @@ async function monitorPayments() {
 
 async function start() {
     console.log('🚀 Starting Zec Dogs Payment Monitor...');
+    console.log('💰 Payment Address:', PAYMENT_ADDRESS);
+    console.log('📊 Max Supply:', MAX_SUPPLY);
     db.exec(`CREATE TABLE IF NOT EXISTS settings (key TEXT PRIMARY KEY, value TEXT)`);
     await monitorPayments();
     setInterval(monitorPayments, SCAN_INTERVAL_MS);
