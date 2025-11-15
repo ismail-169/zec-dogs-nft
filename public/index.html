@@ -38,6 +38,8 @@
         .success { background: #c6f6d5; color: #2f855a; border: 1px solid #9ae6b4; }
         .loading { background: #bee3f8; color: #2b6cb0; border: 1px solid #90cdf4; }
         .warning { background: #fef5e7; color: #c05621; border: 2px solid #ed8936; }
+        .confirming { background: #d6f5d6; color: #2d662d; border: 2px solid #48bb78; animation: pulse 2s ease-in-out infinite; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.8; } }
         .results-section { display: none; }
         .nft-item { background: linear-gradient(135deg, #f7fafc, #edf2f7); border-radius: 15px; padding: 25px; margin: 20px 0; border: 1px solid #e2e8f0; }
         .nft-item h4 { color: #4a5568; margin-bottom: 15px; font-size: 1.2rem; }
@@ -55,7 +57,7 @@
         .modal-content { background: white; border-radius: 20px; padding: 30px; max-width: 600px; width: 90%; box-shadow: 0 10px 30px rgba(0,0,0,0.2); max-height: 90vh; overflow-y: auto; }
         .modal-content h2 { color: #4a5568; margin-bottom: 20px; font-size: 1.5rem; }
         
-        /* WARNING BOX - Prominent styling */
+        /* WARNING BOX */
         .warning-box { 
             background: linear-gradient(135deg, #fed7d7, #feb2b2); 
             border: 3px solid #c53030; 
@@ -63,28 +65,39 @@
             padding: 20px; 
             margin: 20px 0; 
             text-align: center;
-            animation: pulse 2s ease-in-out infinite;
+            animation: pulse-warning 2s ease-in-out infinite;
         }
-        .warning-box .warning-icon { 
-            font-size: 2.5rem; 
-            margin-bottom: 10px; 
+        .warning-box .warning-icon { font-size: 2.5rem; margin-bottom: 10px; }
+        .warning-box .warning-title { font-size: 1.3rem; font-weight: bold; color: #742a2a; margin-bottom: 10px; text-transform: uppercase; }
+        .warning-box .warning-text { font-size: 1.1rem; color: #742a2a; line-height: 1.6; }
+        @keyframes pulse-warning { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.02); } }
+        
+        /* CONFIRMING BOX - New! */
+        .confirming-box { 
+            background: linear-gradient(135deg, #d6f5d6, #b3e6b3); 
+            border: 3px solid #48bb78; 
+            border-radius: 12px; 
+            padding: 20px; 
+            margin: 20px 0; 
+            text-align: center;
+            animation: pulse-confirming 2s ease-in-out infinite;
         }
-        .warning-box .warning-title { 
-            font-size: 1.3rem; 
-            font-weight: bold; 
-            color: #742a2a; 
-            margin-bottom: 10px;
-            text-transform: uppercase;
+        .confirming-box .confirming-icon { font-size: 2.5rem; margin-bottom: 10px; }
+        .confirming-box .confirming-title { font-size: 1.3rem; font-weight: bold; color: #2d662d; margin-bottom: 10px; text-transform: uppercase; }
+        .confirming-box .confirming-text { font-size: 1.1rem; color: #2d662d; line-height: 1.6; }
+        .confirming-box .txid-link { 
+            display: inline-block;
+            margin-top: 10px;
+            padding: 8px 15px;
+            background: white;
+            border-radius: 8px;
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
         }
-        .warning-box .warning-text { 
-            font-size: 1.1rem; 
-            color: #742a2a; 
-            line-height: 1.6;
-        }
-        @keyframes pulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.02); }
-        }
+        .confirming-box .txid-link:hover { background: #f0f0f0; transform: translateY(-2px); }
+        @keyframes pulse-confirming { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.02); } }
         
         .payment-box { background: #f7fafc; border: 2px dashed #cbd5e0; border-radius: 12px; padding: 20px; margin: 20px 0; text-align: center; }
         .payment-box .label { margin-bottom: 10px; font-weight: 600; color: #4a5568; font-size: 1.1rem; }
@@ -133,105 +146,98 @@
             <div id="status"></div>
         </div>
 
-        <div id="results" class="results-section">
-            <div class="card">
-                <h2><span class="emoji">🎉</span> Payment Confirmed!</h2>
-                <div id="cids"></div>
-                <div class="instructions">
-                    <h3>📝 How to Mint Your Items:</h3>
-                    <ol>
-                        <li>Click the <strong>Copy CID</strong> button for each item below</li>
-                        <li>Click <strong>Mint on Zinc</strong> to open the minting platform</li>
-                        <li>On Zinc: Click <strong>"Create Inscription"</strong></li>
-                        <li>Protocol: Select <strong>Zinc (NFTs)</strong></li>
-                        <li>Operation: Choose <strong>Mint NFT</strong></li>
-                        <li>Content Protocol: Select <strong>IPFS</strong></li>
-                        <li>Paste your copied CID in the content field</li>
-                        <li>MIME Type: Select <strong>PNG Image</strong></li>
-                        <li>Click <strong>"Create Inscription"</strong> to complete minting</li>
-                    </ol>
-                </div>
+        <div class="card results-section" id="results">
+            <h2><span class="emoji">🎉</span> Your Minted NFTs</h2>
+            <div id="cids"></div>
+            <div class="instructions">
+                <h3><span class="emoji">📝</span> Next Steps: Inscribe on Zinc Protocol</h3>
+                <ol>
+                    <li>Copy the <strong>CID</strong> from your NFT above.</li>
+                    <li>Visit <strong><a href="https://zinc.is" target="_blank" style="color: #c05621;">zinc.is</a></strong></li>
+                    <li>Create a new inscription using your CID.</li>
+                    <li>Your Zec Dog will be permanently on the Zcash blockchain! 🎊</li>
+                </ol>
             </div>
         </div>
     </div>
 
+    <!-- Payment Modal -->
     <div class="modal-overlay" id="paymentModal">
         <div class="modal-content">
             <h2><span class="emoji">💳</span> Complete Your Payment</h2>
             
-            <!-- CRITICAL WARNING -->
             <div class="warning-box">
                 <div class="warning-icon">⚠️</div>
-                <div class="warning-title">⚠️ IMPORTANT: Send EXACT Amount ⚠️</div>
+                <div class="warning-title">DO NOT CLOSE THIS PAGE</div>
                 <div class="warning-text">
-                    You MUST send the <strong>EXACT amount shown below</strong> (including all decimals).<br>
-                    Sending any other amount will result in payment not being detected!<br>
-                    <strong>⏰ You have 5 MINUTES to complete payment or your session will expire.</strong>
+                    Keep this page open until your payment is confirmed!<br>
+                    We'll automatically detect your transaction.
                 </div>
             </div>
             
             <div class="payment-box">
-                <div class="label">⚡ Send this EXACT amount:</div>
+                <div class="label">Send EXACTLY this amount:</div>
                 <div class="payment-value" id="uniqueAmount">0.00000000 ZEC</div>
-                <button class="btn btn-secondary" onclick="copyValue('uniqueAmount')">📋 Copy Exact Amount</button>
+                <button class="btn btn-secondary" onclick="copyValue('uniqueAmount')">
+                    📋 Copy Amount
+                </button>
             </div>
             
             <div class="payment-box">
-                <div class="label">📬 To this address:</div>
-                <div class="payment-value address-text" id="paymentAddress">...</div>
-                <button class="btn btn-secondary" onclick="copyValue('paymentAddress')">📋 Copy Address</button>
-            </div>
-            
-            <div class="status-message warning" style="font-size: 0.95rem; margin-top: 15px;">
-                💡 <strong>Tip:</strong> Use the "Copy Exact Amount" button to avoid typing errors!
-            </div>
-            
-            <div style="text-align: center; margin-top: 20px;">
-                <div class="loader"></div>
-                <div class="status-message loading" id="modalStatus">Waiting for payment...</div>
-                <div style="color: #718096; font-size: 0.9rem; margin-top: 10px;">
-                    This may take 1-3 minutes after sending
+                <div class="label">To this address:</div>
+                <div class="address-text">
+                    <code id="paymentAddress"></code>
                 </div>
+                <button class="btn btn-secondary" onclick="copyValue('paymentAddress')">
+                    📋 Copy Address
+                </button>
             </div>
+            
+            <div class="status-message loading" id="modalStatus">
+                <div class="loader"></div>
+                <div>Waiting for payment...</div>
+            </div>
+            
+            <button class="btn btn-accent" onclick="closeModal()">
+                Cancel
+            </button>
         </div>
     </div>
 
     <script>
+        const API_BASE = window.location.origin;
         const PRICE_PER_NFT = 0.005;
-        const MAX_QUANTITY = 20;
         let currentQuantity = 1;
         let activeSessionId = null;
         let paymentCheckInterval = null;
 
-        window.addEventListener('load', updateMintProgress);
-        setInterval(updateMintProgress, 30000); // Update every 30 seconds
-
+        // Fetch and display mint progress on page load
         async function updateMintProgress() {
             try {
-                const response = await fetch('/mint-progress');
-                
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                
+                const response = await fetch(`${API_BASE}/mint-progress`);
                 const data = await response.json();
                 
-                // Update progress display
                 document.getElementById('progressNumbers').textContent = `${data.minted} / ${data.total}`;
                 document.getElementById('progressFill').style.width = `${data.percentage}%`;
-                document.getElementById('progressText').textContent = `${data.percentage}% Minted`;
-                
-            } catch (error) { 
+                document.getElementById('progressText').textContent = 
+                    `${data.available} available • ${data.reserved} reserved • ${data.minted} minted`;
+            } catch (error) {
                 console.error('Failed to update progress:', error);
-                // Show error state instead of "Loading..."
-                document.getElementById('progressNumbers').textContent = 'Error';
-                document.getElementById('progressText').textContent = 'Failed to load progress';
             }
+        }
+        
+        updateMintProgress();
+        setInterval(updateMintProgress, 10000); // Update every 10 seconds
+
+        function closeModal() {
+            clearInterval(paymentCheckInterval);
+            document.getElementById('paymentModal').style.display = 'none';
+            activeSessionId = null;
         }
 
         function changeQuantity(delta) {
             const newQuantity = currentQuantity + delta;
-            if (newQuantity >= 1 && newQuantity <= MAX_QUANTITY) {
+            if (newQuantity >= 1 && newQuantity <= 20) {
                 currentQuantity = newQuantity;
                 document.getElementById('quantityDisplay').textContent = currentQuantity;
                 updateTotalPrice();
@@ -242,9 +248,8 @@
             const total = (currentQuantity * PRICE_PER_NFT).toFixed(3);
             document.getElementById('totalPrice').textContent = `Total: ~${total} ZEC`;
         }
-        updateTotalPrice(); // Call on load
+        updateTotalPrice();
 
-        // New flow starts here
         async function startMintProcess() {
             const statusDiv = document.getElementById('status');
             const mintBtn = document.getElementById('mintBtn');
@@ -252,7 +257,7 @@
             statusDiv.innerHTML = '<div class="status-message loading">🔄 Creating payment session...</div>';
 
             try {
-                const response = await fetch('/create-payment-intent', {
+                const response = await fetch(`${API_BASE}/create-payment-intent`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ quantity: currentQuantity })
@@ -274,7 +279,7 @@
                     mintBtn.disabled = false;
                     
                     // Start polling for payment
-                    paymentCheckInterval = setInterval(checkPaymentStatus, 5000); // Check every 5 seconds
+                    paymentCheckInterval = setInterval(checkPaymentStatus, 5000);
                 }
             } catch (error) {
                 statusDiv.innerHTML = '<div class="status-message error">❌ Network error. Please try again.</div>';
@@ -282,23 +287,39 @@
             }
         }
 
-        // New: Polls the server to see if payment is complete
         async function checkPaymentStatus() {
             if (!activeSessionId) return;
 
             try {
-                const response = await fetch(`/check-payment-status/${activeSessionId}`);
+                const response = await fetch(`${API_BASE}/check-payment-status/${activeSessionId}`);
                 const data = await response.json();
 
                 if (data.status === 'complete') {
-                    // SUCCESS!
+                    // SUCCESS - Payment confirmed!
                     clearInterval(paymentCheckInterval);
                     document.getElementById('paymentModal').style.display = 'none';
                     displayResults(data);
-                    updateMintProgress(); // Refresh progress
+                    updateMintProgress();
+                } else if (data.status === 'payment_pending') {
+                    // NEW: Payment detected but waiting for confirmation
+                    document.getElementById('modalStatus').innerHTML = `
+                        <div class="confirming-box">
+                            <div class="confirming-icon">✅</div>
+                            <div class="confirming-title">Payment Detected!</div>
+                            <div class="confirming-text">
+                                Your transaction is in the mempool.<br>
+                                Waiting for blockchain confirmation...<br>
+                                <small>Your NFTs are reserved and won't expire.</small>
+                            </div>
+                            ${data.txid ? `<a href="https://blockchair.com/zcash/transaction/${data.txid}" target="_blank" class="txid-link">View Transaction ↗</a>` : ''}
+                        </div>
+                    `;
                 } else if (data.status === 'pending') {
-                    // Not yet, keep waiting
-                    document.getElementById('modalStatus').textContent = "Waiting for payment...";
+                    // Still waiting for payment
+                    document.getElementById('modalStatus').innerHTML = `
+                        <div class="loader"></div>
+                        <div>Waiting for payment...</div>
+                    `;
                 } else if (data.status === 'expired') {
                     // Session expired
                     clearInterval(paymentCheckInterval);

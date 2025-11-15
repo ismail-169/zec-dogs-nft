@@ -15,13 +15,15 @@ app.use(express.static('public'));
 const PRICE_PER_NFT = 0.005;
 const PAYMENT_ADDRESS = 't1gU211G8Msqb6EYVtdnepjZsfonxd2RR8H';
 const MAX_SUPPLY = 5000;
-const SESSION_TIMEOUT_MINUTES = 5; // Sessions expire after 5 minutes
+const SESSION_TIMEOUT_MINUTES = 10; // Extended to 10 minutes (was 5)
 
 // Cleanup expired sessions on startup and periodically
+// NOTE: Sessions with status 'payment_pending' will NOT be expired!
 function cleanupExpiredSessions() {
     try {
         db.transaction(() => {
-            // Get expired sessions that never completed payment
+            // IMPORTANT: Only expire sessions that are still in 'pending' status
+            // Sessions that are 'payment_pending' have a transaction in mempool and should NOT expire!
             const expiredSessions = db.prepare(`
                 SELECT session_uuid FROM sessions 
                 WHERE status = 'pending' 
@@ -43,6 +45,26 @@ function cleanupExpiredSessions() {
                 }
                 
                 console.log(`✅ Released ${expiredSessions.length} reserved NFT batches`);
+            }
+
+            // Also cleanup old 'payment_pending' sessions that never confirmed (24 hours)
+            const abandonedSessions = db.prepare(`
+                SELECT session_uuid FROM sessions 
+                WHERE status = 'payment_pending' 
+                AND datetime(updated_at, '+24 hours') < datetime('now')
+            `).all();
+
+            if (abandonedSessions.length > 0) {
+                console.log(`🧹 Cleaning up ${abandonedSessions.length} abandoned payment_pending sessions...`);
+                
+                for (const session of abandonedSessions) {
+                    db.prepare('UPDATE nfts SET session_id = NULL WHERE session_id = ? AND claimed = 0')
+                        .run(session.session_uuid);
+                    db.prepare('DELETE FROM sessions WHERE session_uuid = ?')
+                        .run(session.session_uuid);
+                }
+                
+                console.log(`✅ Released ${abandonedSessions.length} abandoned reservations`);
             }
         })();
     } catch (err) {
@@ -158,7 +180,7 @@ app.get('/check-payment-status/:sessionId', (req, res) => {
     
     try {
         const session = db.prepare(`
-            SELECT status, assigned_cids, quantity, created_at 
+            SELECT status, assigned_cids, quantity, created_at, payment_txid 
             FROM sessions 
             WHERE session_uuid = ?
         `).get(sessionId);
@@ -167,7 +189,7 @@ app.get('/check-payment-status/:sessionId', (req, res) => {
             return res.json({ status: 'error', message: 'Invalid session.' });
         }
 
-        // Check if session has expired
+        // Check if session has expired (only for 'pending' status)
         const createdAt = new Date(session.created_at);
         const now = new Date();
         const minutesElapsed = (now - createdAt) / (1000 * 60);
@@ -179,16 +201,28 @@ app.get('/check-payment-status/:sessionId', (req, res) => {
             });
         }
 
+        // Handle different statuses
         if (session.status === 'complete') {
             // Parse assigned CIDs and format as objects for frontend
             const assignedCids = JSON.parse(session.assigned_cids);
             res.json({
                 status: 'complete',
-                items: assignedCids.map(cid => ({ cid })), // Format as objects
+                items: assignedCids.map(cid => ({ cid })),
                 quantity: session.quantity
             });
-        } else {
+        } else if (session.status === 'payment_pending') {
+            // Transaction detected in mempool but not yet confirmed
+            res.json({ 
+                status: 'payment_pending',
+                message: 'Payment detected! Waiting for blockchain confirmation...',
+                txid: session.payment_txid
+            });
+        } else if (session.status === 'pending') {
+            // Still waiting for payment
             res.json({ status: 'pending' });
+        } else {
+            // Other statuses (failed, etc.)
+            res.json({ status: session.status, message: 'Something went wrong.' });
         }
     } catch (err) {
         console.error('Error checking payment status:', err);
@@ -212,5 +246,6 @@ app.listen(PORT, '0.0.0.0', () => {
     console.log(`✅ Server running on port ${PORT}`);
     console.log(`📊 Monitoring ${MAX_SUPPLY} NFTs`);
     console.log(`💰 Price: ${PRICE_PER_NFT} ZEC per NFT`);
-    console.log(`⏰ Session timeout: ${SESSION_TIMEOUT_MINUTES} minutes`);
+    console.log(`⏰ Session timeout: ${SESSION_TIMEOUT_MINUTES} minutes (pending only)`);
+    console.log(`🔒 payment_pending sessions never expire (24h cleanup)`);
 });
