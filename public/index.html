@@ -6,9 +6,53 @@
     <title>Zec Dogs Mint</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; padding: 20px; color: #333; }
-        .container { max-width: 700px; margin: 0 auto; padding: 20px; }
-        .header { text-align: center; margin-bottom: 40px; color: white; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; padding: 20px; color: #333; position: relative; overflow-x: hidden; }
+        
+        /* Scattered custom artwork background - STAYS IN BACK */
+        .bg-artwork {
+            position: fixed;
+            width: 120px;
+            height: 120px;
+            opacity: 0.12;
+            pointer-events: none; /* Can't click on dogs */
+            z-index: -1; /* Behind everything */
+            filter: blur(1px);
+            object-fit: contain;
+        }
+        
+        /* Animations for moving across screen */
+        @keyframes moveLeftToRight {
+            0% { left: -150px; }
+            100% { left: 110%; }
+        }
+        
+        @keyframes moveRightToLeft {
+            0% { left: 110%; }
+            100% { left: -150px; }
+        }
+        
+        @keyframes moveTopToBottom {
+            0% { top: -150px; }
+            100% { top: 110%; }
+        }
+        
+        @keyframes moveBottomToTop {
+            0% { top: 110%; }
+            100% { top: -150px; }
+        }
+        
+        @keyframes moveDiagonalTL {
+            0% { left: -150px; top: -150px; }
+            100% { left: 110%; top: 110%; }
+        }
+        
+        @keyframes moveDiagonalTR {
+            0% { left: 110%; top: -150px; }
+            100% { left: -150px; top: 110%; }
+        }
+        
+        .container { max-width: 700px; margin: 0 auto; padding: 20px; position: relative; z-index: 10; }
+        .header { text-align: center; margin-bottom: 40px; color: white; position: relative; z-index: 5; }
         .header h1 { font-size: 3rem; font-weight: bold; margin-bottom: 10px; text-shadow: 2px 2px 4px rgba(0,0,0,0.3); background: linear-gradient(45deg, #ffd700, #ffed4e); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
         .header p { font-size: 1.2rem; opacity: 0.9; text-shadow: 1px 1px 2px rgba(0,0,0,0.3); }
         .progress-container { background: rgba(255, 255, 255, 0.15); backdrop-filter: blur(10px); border-radius: 15px; padding: 20px; margin-top: 30px; border: 1px solid rgba(255, 255, 255, 0.2); }
@@ -18,7 +62,7 @@
         .progress-bar { width: 100%; height: 12px; background: rgba(255, 255, 255, 0.2); border-radius: 6px; overflow: hidden; margin-bottom: 10px; box-shadow: inset 0 2px 4px rgba(0,0,0,0.1); }
         .progress-fill { height: 100%; background: linear-gradient(90deg, #48bb78, #38a169, #2f855a); border-radius: 6px; transition: width 0.8s ease; }
         .progress-text { text-align: center; color: white; font-size: 0.95rem; font-weight: 600; text-shadow: 1px 1px 2px rgba(0,0,0,0.3); }
-        .card { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); border-radius: 20px; padding: 30px; margin: 25px 0; box-shadow: 0 15px 35px rgba(0,0,0,0.1); border: 1px solid rgba(255,255,255,0.2); }
+        .card { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); border-radius: 20px; padding: 30px; margin: 25px 0; box-shadow: 0 15px 35px rgba(0,0,0,0.1); border: 1px solid rgba(255,255,255,0.2); position: relative; z-index: 5; }
         .card h2 { color: #4a5568; margin-bottom: 20px; font-size: 1.5rem; display: flex; align-items: center; gap: 10px; }
         .quantity-selector { background: #f7fafc; border-radius: 12px; padding: 20px; margin: 20px 0; }
         .quantity-selector label { display: block; margin-bottom: 10px; font-weight: 600; color: #4a5568; }
@@ -112,7 +156,7 @@
     <div class="container">
         <div class="header">
             <h1>ZEC DOGS</h1>
-            <p>Premium Digital Collection on Zcash</p>
+            <p>The First Official Zec Nft Collection</p>
             <div class="progress-container">
                 <div class="progress-info">
                     <span class="progress-label">Mint Progress</span>
@@ -150,13 +194,22 @@
             <h2><span class="emoji">🎉</span> Your Minted NFTs</h2>
             <div id="cids"></div>
             <div class="instructions">
-                <h3><span class="emoji">📝</span> Next Steps: Inscribe on Zinc Protocol</h3>
+                <h3><span class="emoji">📝</span> How to Inscribe Your Zec Dog on Zinc Protocol</h3>
                 <ol>
-                    <li>Copy the <strong>CID</strong> from your NFT above.</li>
-                    <li>Visit <strong><a href="https://zinc.is" target="_blank" style="color: #c05621;">zinc.is</a></strong></li>
-                    <li>Create a new inscription using your CID.</li>
-                    <li>Your Zec Dog will be permanently on the Zcash blockchain! 🎊</li>
+                    <li><strong>Copy Your CID:</strong> Click the "📋 Copy CID" button above for your NFT</li>
+                    <li><strong>Open Zinc:</strong> Click "🚀 Mint on Zinc" or visit <a href="https://zinc.is" target="_blank" style="color: #c05621; text-decoration: underline;">zinc.is</a></li>
+                    <li><strong>Create Inscription:</strong> Click the <strong>"Create Inscription"</strong> button</li>
+                    <li><strong>Protocol:</strong> Select <strong>"Zinc (NFTs)"</strong> from dropdown</li>
+                    <li><strong>Operation:</strong> Select <strong>"Mint NFT"</strong></li>
+                    <li><strong>Content Protocol:</strong> Select <strong>"IPFS"</strong></li>
+                    <li><strong>Content:</strong> Paste your copied CID into the content field</li>
+                    <li><strong>MIME Type:</strong> Select <strong>"PNG Image"</strong></li>
+                    <li><strong>Tip (Optional):</strong> Enter zatoshis amount for faster confirmation (or leave as 0)</li>
+                    <li><strong>Create:</strong> Click <strong>"Create Inscription"</strong> button to finalize!</li>
                 </ol>
+                <p style="margin-top: 15px; color: #744210; font-weight: 600;">
+                    ✅ Once confirmed, your Zec Dog is permanently inscribed on the Zcash blockchain! 🎊
+                </p>
             </div>
         </div>
     </div>
@@ -168,9 +221,13 @@
             
             <div class="warning-box">
                 <div class="warning-icon">⚠️</div>
-                <div class="warning-title">DO NOT CLOSE THIS PAGE</div>
+                <div class="warning-title">⚠️ IMPORTANT WARNINGS ⚠️</div>
                 <div class="warning-text">
-                    Keep this page open until your payment is confirmed!<br>
+                    <strong>1. Send EXACT Amount (including all decimals!)</strong><br>
+                    Sending any other amount = payment NOT detected!<br><br>
+                    <strong>2. You have 10 MINUTES to complete payment</strong><br>
+                    After 10 minutes, your session expires.<br><br>
+                    <strong>3. Keep this page open until confirmed!</strong><br>
                     We'll automatically detect your transaction.
                 </div>
             </div>
@@ -340,7 +397,7 @@
             data.items.forEach((item, i) => {
                 html += `
                     <div class="nft-item">
-                        <h4>🐕 Zec Dog (Mint #${i + 1})</h4>
+                        <h4>🐕 Your Zec Dog #${i + 1}</h4>
                         <div class="cid-display" id="cid${i}">${item.cid}</div>
                         <div class="btn-group">
                             <button class="btn btn-secondary" onclick="copyValue('cid${i}', true)">
@@ -383,6 +440,68 @@
                 toast.remove();
             }, 3000);
         }
+        
+        // Generate moving background artwork (stays behind all content)
+        // Dogs move across screen in various directions as decoration
+        function createBackgroundArtwork() {
+            // Array of your custom dog artwork filenames (from /public folder)
+            const artwork = [
+                '978.png', '979.png', '980.png', '981.png', '982.png',
+                '983.png', '984.png', '985.png', '986.png'
+            ];
+            
+            // Different movement animations
+            const animations = [
+                'moveLeftToRight',
+                'moveRightToLeft', 
+                'moveTopToBottom',
+                'moveBottomToTop',
+                'moveDiagonalTL',
+                'moveDiagonalTR'
+            ];
+            
+            const count = 15; // Number of moving elements
+            
+            for (let i = 0; i < count; i++) {
+                const img = document.createElement('img');
+                img.className = 'bg-artwork';
+                img.src = artwork[Math.floor(Math.random() * artwork.length)];
+                img.alt = ''; // Decorative, no alt text needed
+                
+                // Pick random animation
+                const animationType = animations[Math.floor(Math.random() * animations.length)];
+                
+                // Random duration (15-40 seconds for smooth movement)
+                const duration = 15 + Math.random() * 25;
+                
+                // Random delay before starting
+                const delay = Math.random() * 10;
+                
+                // Apply animation
+                img.style.animation = `${animationType} ${duration}s linear ${delay}s infinite`;
+                
+                // Random vertical position for horizontal movements
+                if (animationType.includes('LeftToRight') || animationType.includes('RightToLeft')) {
+                    img.style.top = Math.random() * 100 + '%';
+                }
+                
+                // Random horizontal position for vertical movements
+                if (animationType.includes('TopToBottom') || animationType.includes('BottomToTop')) {
+                    img.style.left = Math.random() * 100 + '%';
+                }
+                
+                // Random size variation
+                const sizeVariation = 0.6 + Math.random() * 0.8; // 0.6x to 1.4x
+                const size = 120 * sizeVariation;
+                img.style.width = size + 'px';
+                img.style.height = size + 'px';
+                
+                document.body.appendChild(img);
+            }
+        }
+        
+        // Call on page load
+        window.addEventListener('load', createBackgroundArtwork);
     </script>
 </body>
 </html>
